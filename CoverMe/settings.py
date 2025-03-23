@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'livereload.middleware.LiveReloadScript',
 ]
 
+LIVERELOAD_HOST="192.168.1.238"
 
 ROOT_URLCONF = 'CoverMe.urls'
 

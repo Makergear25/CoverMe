@@ -7,8 +7,25 @@
     <link rel="stylesheet" href="{% static 'covercalendar/style.css' %}">
 </head>
 <body>
-    <h1>test3</h1>
-    
-    <script src="http://192.168.1.238:35729/livereload.js"></script>
+    <h1>CoverCalendar</h1>
+    {% comment %} Table for the calendar {% endcomment %}
+    <div>
+        <table>
+            <tr>
+                <th></th>
+                <th scope="col">Monday</th>
+                <th scope="col">Tuesday</th>
+                <th scope="col">Wednesday</th>
+                <th scope="col">Thursday</th>
+                <th scope="col">Friday</th>
+            </tr>
+            <tr>
+                <th scope="row">8:00 - 8:45</th>
+                <th scope="row">8:50 - 9:55</th>
+                <th scope="row"></th>
+                <th>s</th>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>

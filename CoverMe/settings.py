@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-b+ut8+=7+jv!$4b!*@7ijq_t8bo0^3cfv*uosns(u%!m-u!rx9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.1.238"]
 
 
 # Application definition
@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'livereload',
     'django.contrib.staticfiles',
     'CoverCalendar.apps.CovercalendarConfig'
 ]
@@ -48,7 +49,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'livereload.middleware.LiveReloadScript',
 ]
+
 
 ROOT_URLCONF = 'CoverMe.urls'
 

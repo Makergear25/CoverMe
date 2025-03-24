@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-b+ut8+=7+jv!$4b!*@7ijq_t8bo0^3cfv*uosns(u%!m-u!rx9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.238"]
+ALLOWED_HOSTS = ["192.168.1.238", "127.0.0.1"]
 
 
 # Application definition
@@ -52,14 +52,14 @@ MIDDLEWARE = [
     'livereload.middleware.LiveReloadScript',
 ]
 
-LIVERELOAD_HOST="192.168.1.238"
+# LIVERELOAD_HOST="192.168.1.238"
 
 ROOT_URLCONF = 'CoverMe.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'US/Eastern'
 
 USE_I18N = True
 

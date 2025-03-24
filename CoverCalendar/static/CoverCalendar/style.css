@@ -1,8 +1,19 @@
-h1 {
-    text-align: center;
+html, body{
+    overflow: hidden;
+    font-size: 14px;
 }
 
-table {
-    margin-left: auto;
-    margin-right: auto;
+#calendar-container{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.fc-header-toolbar{
+    /* an em is a relative unit of measurement that is based on the current font size. */
+    padding-top: 1em; 
+    padding-left: 1em;
+    padding-right: 1em;
 }

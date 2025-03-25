@@ -16,18 +16,19 @@ document.addEventListener('DOMContentLoaded', function() {
             right: 'today prev,next'
         },
 
-        eventClick: function(info) {
-            alert('Event: ' + info.event.title);
-            alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
-            alert('View: ' + info.view.type);
+        // eventClick: function(info) {
+        //     alert('Event: ' + info.event.title);
+        //     alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+        //     alert('View: ' + info.view.type);
 
-            info.el.style.borderColor = 'red';
-        },
+        //     info.el.style.borderColor = 'red';
+        // },
 
 
         //event data:
         // TODO: Come back to this moving on for now
         events: '/time_blocks'
+        
     });
     calendar.render();
 });

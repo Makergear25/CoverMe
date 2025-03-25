@@ -18,3 +18,4 @@ class ClassBlocks(models.Model):
     
     def __str__(self):
         return self.block_number
+    

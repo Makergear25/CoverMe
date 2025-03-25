@@ -25,9 +25,9 @@ SECRET_KEY = 'django-insecure-b+ut8+=7+jv!$4b!*@7ijq_t8bo0^3cfv*uosns(u%!m-u!rx9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.241", "127.0.0.1"]
+ALLOWED_HOSTS = ["192.168.1.208", "127.0.0.1"]
 
-INTERNAL_IPS = ["192.168.1.241"]
+INTERNAL_IPS = ["192.168.1.208"]
 
 
 # Application definition
@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'livereload.middleware.LiveReloadScript',
 ]
 
-LIVERELOAD_HOST="192.168.1.241"
+LIVERELOAD_HOST="192.168.1.208"
 
 ROOT_URLCONF = 'CoverMe.urls'
 

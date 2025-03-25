@@ -10,7 +10,7 @@ html, body{
 #calendar-container{
     position: relative;
     width: 50%;
-    height: 800px;
+    height: 800px; /* I don't want to keep this static to account for different window sizes */
     margin-top: 20px;
 }
 

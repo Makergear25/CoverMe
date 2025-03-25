@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
+from debug_toolbar.toolbar import debug_toolbar_urls
 
 from CoverCalendar import views
 
@@ -24,6 +25,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('covercalendar/', include('CoverCalendar.urls')),
     path('', RedirectView.as_view(url='/covercalendar/', permanent=False)),
-    path('all_preventive_maintenance/', views.allPreventive, name='allmp'),
-    path('mp/', views.all_preventive_maintenance, name='mp'),
-]
+    path('all_preventive_maintenance/', views.cover_calendar, name='allmp'),
+    # path('mp/', views.all_preventive_maintenance, name='mp'),
+] + debug_toolbar_urls()

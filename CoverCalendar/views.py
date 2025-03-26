@@ -1,26 +1,16 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import generic
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
 
-from .models import PreventiveMaintenance, ClassBlocks
+from .models import ClassBlocks, CycleDay, TimeSlot, BlockAssignment
 
 # Create your views here.
 def index(request):
     return render(request, 'covercalendar/index.html', {
         'timestamp': datetime.now().timestamp()
     })
-    
-    
-# Calendar:
-def cover_calendar(request):
-    all_events = PreventiveMaintenance.objects.all() # query database
-    context = {
-        "events": all_events,
-    }
-    return render(request, 'covercalendar/index.html', context)
-
 
 
 def class_cycle(request):
@@ -94,12 +84,51 @@ def class_cycle(request):
     
     final_output = day_block + output
     
-    # for i, slot in enumerate(time_outline):
-    #     slot['title'] = "Block " + str(x+i)
-    #     print(slot)
-    #     print(x+i)
-    return JsonResponse(final_output, safe=False)
 
-
-# def seven_day_cycle(request):
+# Very rough version of how this controller should/will operate
+def seven_day_cycle(request):
+    # Start date March 24, 2025 as Day 1 | This is temp while I figure out how to make this work properly
+    start_date = datetime(2025, 3, 24).date()
     
+    events = []
+    
+    # Generate events for a 7-day cycle
+    for day_offset in range(7):
+        current_date = start_date + timedelta(days=day_offset)
+        day_number = day_offset + 1  # Day 1 through 7
+        
+        # Add the day label
+        events.append({
+            'title': f'Day {day_number}',
+            'start': current_date.strftime('%Y-%m-%d'),
+            'end': current_date.strftime('%Y-%m-%d'),
+            'allDay': True,
+            'color': '#3788d8',  # Blue color for day labels
+            'textColor': 'white'
+        })
+        
+        # Get block assignments for this day
+        block_assignments = BlockAssignment.objects.filter(
+            cycle_day__day_number=day_number
+        ).order_by('time_slot__period_number')
+        
+        # Add each class block for this day
+        for assignment in block_assignments:
+            time_slot = assignment.time_slot
+            
+            # Format times for this date
+            start_time = time_slot.start_time.strftime('%H:%M:%S')
+            end_time = time_slot.end_time.strftime('%H:%M:%S')
+            
+            # Create event object
+            events.append({
+                'title': f'Block {assignment.block_number}',
+                'start': f'{current_date.strftime("%Y-%m-%d")}T{start_time}',
+                'end': f'{current_date.strftime("%Y-%m-%d")}T{end_time}',
+                'allDay': False,
+            })
+    return JsonResponse(events, safe=False)
+
+# how the seven day cycle is routed to the calendar
+def time_blocks(request):
+    return seven_day_cycle(request)

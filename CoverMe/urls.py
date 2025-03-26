@@ -25,5 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('covercalendar/', include('CoverCalendar.urls')),
     path('', RedirectView.as_view(url='/covercalendar/', permanent=False)),
-    path('time_blocks/', views.class_cycle, name='Class-Time-Outline')
+    path('time_blocks/', views.time_blocks, name='Class-Time-Outline')
 ] + debug_toolbar_urls()

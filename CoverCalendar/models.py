@@ -1,14 +1,6 @@
 from django.db import models
 
 # Create your models here.
-
-class PreventiveMaintenance(models.Model):
-    activity = models.CharField(max_length=200)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return self.activity
     
 class ClassBlocks(models.Model):
     cycle_number = models.IntegerField() # TODO: Not sure 'IntegerField' is the correct choice here.
@@ -34,5 +26,14 @@ class TimeSlot(models.Model):
     def __str__(self):
         return f"Period {self.period_number} ({self.start_time.strftime('%H:%M')} - {self.end_time.strftime('%H:%M')})"
     
-class BlockAssignment(models.Model)
+class BlockAssignment(models.Model):
+    cycle_day = models.ForeignKey(CycleDay, on_delete=models.CASCADE)
+    time_slot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE)
+    block_number = models.IntegerField()
+    
+    class Meta:
+        unique_together = [['cycle_day', 'time_slot'], ['cycle_day', 'block_number']]
+        
+    def __str__(self):
+        return f"Day {self.cycle_day.day_number}, Period {self.time_slot.period_number}: Block {self.block_number}"
     

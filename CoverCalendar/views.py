@@ -92,11 +92,14 @@ def seven_day_cycle(request):
     
     events = []
     
-    # Generate events for a 7-day cycle
+    # Generate blocks for the 7 day cycle
     for day_offset in range(7):
         current_date = start_date + timedelta(days=day_offset)
         day_number = day_offset + 1  # Day 1 through 7
         
+        if((current_date.weekday()) > 4):
+            current_date = current_date+timedelta(days=2)
+
         # Add the day label
         events.append({
             'title': f'Day {day_number}',

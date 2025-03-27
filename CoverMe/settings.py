@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["192.168.1.208", "127.0.0.1"]
 
-INTERNAL_IPS = ["192.168.1.208"]
+# INTERNAL_IPS = ["192.168.1.208"]
 
 
 # Application definition
@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'livereload.middleware.LiveReloadScript',
 ]
 
-LIVERELOAD_HOST="192.168.1.208"
+# LIVERELOAD_HOST="192.168.1.208"
 
 ROOT_URLCONF = 'CoverMe.urls'
 

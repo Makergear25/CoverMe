@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
         expandRows: true,
         initialView: 'timeGridWeek',
         height: "100%",
-        // weekends: false,
+        weekends: true,
         slotMinTime: '08:00',
         slotMaxTime: '15:00',
 

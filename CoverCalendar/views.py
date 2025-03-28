@@ -4,7 +4,10 @@ from django.views import generic
 from datetime import datetime, timedelta
 from django.utils import timezone
 
-from .models import ClassBlocks, CycleDay, TimeSlot, BlockAssignment
+from .models import (
+    ClassBlocks, CycleDay, TimeSlot, BlockAssignment,
+    Cycle, Day, TimeBlock
+)
 
 # Create your views here.
 def index(request):
@@ -85,51 +88,61 @@ def class_cycle(request):
     final_output = day_block + output
     
 
-# Very rough version of how this controller should/will operate
+# New version using the improved day model structure
 def seven_day_cycle(request):
-    # Start date March 24, 2025 as Day 1 | This is temp while I figure out how to make this work properly
-    start_date = datetime(2025, 3, 24).date()
-    
     events = []
     
-    # Generate blocks for the 7 day cycle
-    for day_offset in range(7):
-        current_date = start_date + timedelta(days=day_offset)
-        day_number = day_offset + 1  # Day 1 through 7
+    try:
+        # Get the most recent cycle
+        current_cycle = Cycle.objects.order_by('start_date').first()
         
-        if((current_date.weekday()) > 4):
-            current_date = current_date+timedelta(days=2)
-
-        # Add the day label
-        events.append({
-            'title': f'Day {day_number}',
-            'start': current_date.strftime('%Y-%m-%d'),
-            'end': current_date.strftime('%Y-%m-%d'),
-            'allDay': True,
-            'color': '#3788d8',  # Blue color for day labels
-            'textColor': 'white'
-        })
-        
-        # Get block assignments for this day
-        block_assignments = BlockAssignment.objects.filter(
-            cycle_day__day_number=day_number
-        ).order_by('time_slot__period_number')
-        
-        # Add each class block for this day
-        for assignment in block_assignments:
-            time_slot = assignment.time_slot
+        if not current_cycle:
+            # If no cycles exist yet, return empty
+            return JsonResponse(events, safe=False)
             
-            # Format times for this date
-            start_time = time_slot.start_time.strftime('%H:%M:%S')
-            end_time = time_slot.end_time.strftime('%H:%M:%S')
-            
-            # Create event object
+        # Get all days in the cycle
+        days = Day.objects.filter(cycle=current_cycle).order_by('-date')
+        
+        # For each day, create events
+        for day in days:
+            # Add the day label
             events.append({
-                'title': f'Block {assignment.block_number}',
-                'start': f'{current_date.strftime("%Y-%m-%d")}T{start_time}',
-                'end': f'{current_date.strftime("%Y-%m-%d")}T{end_time}',
-                'allDay': False,
+                'title': f'Day {day.day_number}',
+                'start': day.date.strftime('%Y-%m-%d'),
+                'end': day.date.strftime('%Y-%m-%d'),
+                'allDay': True,
+                'color': '#3788d8',  # Blue color for day labels
+                'textColor': 'white',
+                'special': day.is_special_schedule
             })
+
+            # Get all time blocks for this day
+            time_blocks = TimeBlock.objects.filter(day=day).order_by('start_time')
+            
+            # Add each class block for this day
+            for block in time_blocks:
+                # Format times for this date
+                start_time = block.start_time.strftime('%H:%M:%S')
+                end_time = block.end_time.strftime('%H:%M:%S')
+                
+                # Create event object
+                event = {
+                    'title': f'Block {block.block_number}',
+                    'start': f'{day.date.strftime("%Y-%m-%d")}T{start_time}',
+                    'end': f'{day.date.strftime("%Y-%m-%d")}T{end_time}',
+                    'allDay': False,
+                }
+                
+                # Add notes if present
+                if block.notes:
+                    event['description'] = block.notes
+                    
+                events.append(event)
+                
+    except Exception as e:
+        # Log error and return empty events list
+        print(f"Error retrieving cycle data: {e}")
+    
     return JsonResponse(events, safe=False)
 
 # how the seven day cycle is routed to the calendar

@@ -58,7 +58,8 @@ class CycleGenerationSettings(models.Model):
             cycle = Cycle.objects.create(
                 start_date=current_date,
                 end_date=cycle_end_date,
-                name=cycle_name
+                name=cycle_name,
+                generation_settings=self
             )
             cycles_created.append(cycle)
             
@@ -69,12 +70,31 @@ class CycleGenerationSettings(models.Model):
             while day_date <= cycle_end_date and day_number <= self.cycle_length:
                 # Only create a day if it's a weekday
                 if day_date.weekday() < 5:  # 0-4 are Monday-Friday
-                    Day.objects.create(
+                    day = Day.objects.create(
                         cycle=cycle,
                         date=day_date,
                         day_number=day_number,
                         is_special_schedule=False
                     )
+                    
+                    # Create default time blocks for each day
+                    default_times = [
+                        (8, 0, 8, 45, 1),   # 8:00 - 8:45, Block 1
+                        (8, 50, 9, 55, 2),   # 8:50 - 9:55, Block 2
+                        (10, 40, 11, 55, 3), # 10:40 - 11:55, Block 3
+                        (12, 0, 12, 45, 4),  # 12:00 - 12:45, Block 4
+                        (13, 25, 14, 10, 5), # 13:25 - 14:10, Block 5
+                        (14, 15, 15, 0, 6)   # 14:15 - 15:00, Block 6
+                    ]
+                    
+                    for time_data in default_times:
+                        TimeBlock.objects.create(
+                            day=day,
+                            start_time=f"{time_data[0]:02d}:{time_data[1]:02d}:00",
+                            end_time=f"{time_data[2]:02d}:{time_data[3]:02d}:00",
+                            block_number=time_data[4]
+                        )
+                    
                     day_number += 1
                 
                 # Move to next day
@@ -91,6 +111,13 @@ class Cycle(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     name = models.CharField(max_length=100, blank=True, null=True)
+    generation_settings = models.ForeignKey(
+        CycleGenerationSettings, 
+        on_delete=models.CASCADE, 
+        related_name='cycles',
+        null=True, 
+        blank=True
+    )
     
     def __str__(self):
         if self.name:

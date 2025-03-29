@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendar = new FullCalendar.Calendar(calendarEl, {
         timeZone: 'local',
         expandRows: true,
-        initialView: 'timeGridWeek',
+        initialView: 'timeGridWeek', // Show month view by default
         height: "100%",
         weekends: true,
         slotMinTime: '08:00',
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             right: 'today prev,next'
         },
 
+
         // eventClick: function(info) {
         //     alert('Event: ' + info.event.title);
         //     alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
@@ -24,9 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
         //     info.el.style.borderColor = 'red';
         // },
 
-
         //event data:
-        // TODO: Come back to this moving on for now
         events: '/time_blocks'
         
     });

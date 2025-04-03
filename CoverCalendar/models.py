@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import date, timedelta
+from django.utils import timezone
 
 # Model for cycle generation settings
 class CycleGenerationSettings(models.Model):
@@ -162,6 +163,38 @@ class TimeBlock(models.Model):
     def __str__(self):
         return f"Block {self.block_number} ({self.start_time} - {self.end_time})"
 
+# Model for teacher coverage tracking
+class TeacherCoverage(models.Model):
+    teacher_name = models.CharField(max_length=100, unique=True)
+    display_name = models.CharField(max_length=100, blank=True, null=True, help_text="Properly capitalized display name")
+    coverage_count = models.IntegerField(default=0)
+    first_coverage_date = models.DateTimeField(null=True, blank=True)
+    last_coverage_date = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-coverage_count']
+        verbose_name = "Teacher Coverage"
+        verbose_name_plural = "Teacher Coverages"
+    
+    def __str__(self):
+        display = self.display_name or self.teacher_name
+        return f"{display} - {self.coverage_count} coverages"
+    
+    def increment_count(self):
+        now = timezone.now()
+        self.coverage_count += 1
+        
+        if not self.first_coverage_date:
+            self.first_coverage_date = now
+            
+        self.last_coverage_date = now
+        self.save()
+    
+    def save(self, *args, **kwargs):
+        # Ensure teacher_name is always lowercase for case-insensitive lookups
+        self.teacher_name = self.teacher_name.strip().lower()
+        super().save(*args, **kwargs)
+
 # Model for coverage requests
 class CoverageRequest(models.Model):
     time_block = models.ForeignKey(TimeBlock, on_delete=models.CASCADE, related_name='coverage_requests')
@@ -170,6 +203,8 @@ class CoverageRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True, help_text="Additional notes for the coverage request")
     is_fulfilled = models.BooleanField(default=False, help_text="Whether this coverage request has been fulfilled")
+    covered_by = models.CharField(max_length=100, blank=True, null=True, help_text="Name of the teacher who covered this request")
+    covered_at = models.DateTimeField(null=True, blank=True, help_text="When this request was covered")
     
     class Meta:
         ordering = ['-created_at']

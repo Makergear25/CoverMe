@@ -50,9 +50,9 @@
                         <label for="cover-teacher">Requested By:</label>
                         <input type="text" id="cover-teacher" readonly>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="teacher-name-container">
                         <label for="covering-teacher">Your Name:</label>
-                        <input type="text" id="covering-teacher" placeholder="Enter your name">
+                        <!-- Input field will be dynamically created here -->
                     </div>
                     <button type="submit" id="cover-save-button">Submit</button>
                 </form>
@@ -71,6 +71,39 @@
             function formatDate(dateString) {
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 return new Date(dateString).toLocaleDateString('en-US', options);
+            }
+            
+            // Function to create a fresh name input field
+            function createFreshNameField() {
+                const container = document.getElementById('teacher-name-container');
+                
+                // Save the label
+                const label = container.querySelector('label');
+                
+                // Clear the container but keep the label
+                while (container.firstChild) {
+                    container.removeChild(container.firstChild);
+                }
+                container.appendChild(label);
+                
+                // Create a new unique input field
+                const uniqueId = 'covering_teacher_' + Date.now();
+                const inputField = document.createElement('input');
+                inputField.type = 'text';
+                inputField.id = uniqueId;
+                inputField.name = uniqueId;
+                inputField.className = 'covering-teacher-input';
+                inputField.placeholder = 'Enter your name';
+                
+                // Apply multiple techniques to prevent autofill
+                inputField.autocomplete = 'new-password';
+                inputField.setAttribute('data-lpignore', 'true');
+                inputField.setAttribute('data-form-type', 'other');
+                
+                // Add to container
+                container.appendChild(inputField);
+                
+                return inputField;
             }
             
             // Function to load unfulfilled coverage requests
@@ -142,8 +175,8 @@
                                     document.getElementById('cover-time').value = this.dataset.time;
                                     document.getElementById('cover-teacher').value = this.dataset.teacher;
                                     
-                                    // Clear any previous input
-                                    document.getElementById('covering-teacher').value = '';
+                                    // Create fresh input field for name entry
+                                    createFreshNameField();
                                     
                                     // Show the form
                                     coverFormContent.style.display = 'none';
@@ -172,7 +205,14 @@
             coverBlockForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                const coveringTeacher = document.getElementById('covering-teacher').value.trim();
+                // Get the current name input (since ID may have changed)
+                const nameInput = document.querySelector('.covering-teacher-input');
+                if (!nameInput) {
+                    alert('Error: Name field not found');
+                    return;
+                }
+                
+                const coveringTeacher = nameInput.value.trim();
                 const coverageId = document.getElementById('coverage-id').value;
                 
                 if (!coveringTeacher) {
@@ -196,6 +236,8 @@
                         coverFormContent.innerHTML = '<p class="success-message">Thank you for covering this class!</p>';
                         setTimeout(() => {
                             coverFormContent.innerHTML = '<p>Click on a class to volunteer to cover it</p>';
+                            // Force page refresh after successful submission to ensure clean state for next user
+                            window.location.reload();
                         }, 3000);
                     }
                 })
@@ -204,6 +246,9 @@
                     alert('There was an error submitting your request. Please try again.');
                 });
             });
+            
+            // Create first input field when loaded
+            createFreshNameField();
             
             // Load unfulfilled requests when the page loads
             loadUnfulfilledRequests();

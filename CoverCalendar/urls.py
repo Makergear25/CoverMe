@@ -11,4 +11,7 @@ urlpatterns = [
     path("cover-classes/", views.cover_classes, name="cover_classes"),
     path("api/fulfill-coverage/", views.fulfill_coverage, name="fulfill_coverage"),
     path("api/unfulfilled-requests/", views.get_unfulfilled_requests, name="get_unfulfilled_requests"),
+    # Teacher coverage statistics endpoints
+    path("coverage-stats/", views.coverage_stats, name="coverage_stats"),
+    path("api/teacher-coverage-stats/", views.get_teacher_coverage_stats, name="get_teacher_coverage_stats"),
 ]

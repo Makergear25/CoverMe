@@ -9,7 +9,7 @@ import json
 
 from .models import (
     ClassBlocks, CycleDay, TimeSlot, BlockAssignment,
-    Cycle, Day, TimeBlock, CoverageRequest
+    Cycle, Day, TimeBlock, CoverageRequest, TeacherCoverage
 )
 
 # Create your views here.
@@ -214,7 +214,7 @@ def seven_day_cycle(request):
                 if block.notes:
                     event['description'] = block.notes
                 
-                                # Check if this block has any coverage requests
+                # Check if this block has any coverage requests
                 date_str = day.date.strftime('%Y-%m-%d')
                 key = f"{date_str}-{displayed_block_number}"
                 
@@ -341,6 +341,12 @@ def cover_classes(request):
         'timestamp': datetime.now().timestamp()
     })
 
+# View for teacher coverage statistics page
+def coverage_stats(request):
+    return render(request, 'CoverCalendar/coverage_stats.html', {
+        'timestamp': datetime.now().timestamp()
+    })
+
 # Endpoint to mark a coverage request as fulfilled
 @csrf_exempt
 def fulfill_coverage(request):
@@ -363,9 +369,25 @@ def fulfill_coverage(request):
                 return JsonResponse({'error': 'Coverage request not found'}, status=404)
             
             # Update the coverage request
+            now = timezone.now()
             coverage_request.is_fulfilled = True
+            coverage_request.covered_by = covering_teacher
+            coverage_request.covered_at = now
             coverage_request.notes = f"Covered by: {covering_teacher}" + (f", Previous notes: {coverage_request.notes}" if coverage_request.notes else "")
             coverage_request.save()
+            
+            # Track teacher coverage count - normalized to lowercase for case insensitivity
+            normalized_teacher_name = covering_teacher.strip().lower()
+            teacher_coverage, created = TeacherCoverage.objects.get_or_create(
+                teacher_name=normalized_teacher_name
+            )
+            
+            # Store the original capitalization as display name if this is a new teacher
+            if created or not teacher_coverage.display_name:
+                teacher_coverage.display_name = covering_teacher
+                teacher_coverage.save()
+                
+            teacher_coverage.increment_count()
             
             return JsonResponse({
                 'success': True, 
@@ -409,4 +431,30 @@ def get_unfulfilled_requests(request):
     
     except Exception as e:
         print(f"Error retrieving unfulfilled coverage requests: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+# API endpoint to get teacher coverage statistics
+def get_teacher_coverage_stats(request):
+    try:
+        # Get all teacher coverage stats ordered by count (highest first)
+        teacher_stats = TeacherCoverage.objects.all()
+        
+        # Convert to list of dicts
+        data = []
+        for stat in teacher_stats:
+            # Use display_name if available, otherwise use teacher_name
+            display_name = stat.display_name or stat.teacher_name.title()
+            
+            data.append({
+                'id': stat.id,
+                'teacher_name': display_name,
+                'coverage_count': stat.coverage_count,
+                'first_coverage': stat.first_coverage_date.isoformat() if stat.first_coverage_date else None,
+                'last_coverage': stat.last_coverage_date.isoformat() if stat.last_coverage_date else None
+            })
+        
+        return JsonResponse(data, safe=False)
+    
+    except Exception as e:
+        print(f"Error retrieving teacher coverage statistics: {e}")
         return JsonResponse({'error': str(e)}, status=500)

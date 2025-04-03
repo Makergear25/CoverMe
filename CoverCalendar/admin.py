@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Cycle, Day, TimeBlock, CoverageRequest, CycleGenerationSettings,
-    TeacherCoverage, CycleDay, TimeSlot, BlockAssignment
+    TeacherCoverage
 )
 
 # Register your models here.
@@ -9,9 +9,6 @@ admin.site.register(Cycle)
 admin.site.register(Day)
 admin.site.register(TimeBlock)
 admin.site.register(CycleGenerationSettings)
-admin.site.register(CycleDay)
-admin.site.register(TimeSlot)
-admin.site.register(BlockAssignment)
 
 @admin.register(CoverageRequest)
 class CoverageRequestAdmin(admin.ModelAdmin):

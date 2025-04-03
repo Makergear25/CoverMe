@@ -173,7 +173,7 @@ class CoverageRequest(models.Model):
     
     class Meta:
         ordering = ['-created_at']
-        unique_together = [['time_block', 'request_date']]
+        # Removed unique_together constraint to allow multiple coverage requests for the same block/date
     
     def __str__(self):
         return f"Coverage for {self.time_block} requested by {self.teacher_name} on {self.request_date}"

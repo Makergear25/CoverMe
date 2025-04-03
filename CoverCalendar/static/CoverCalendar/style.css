@@ -3,8 +3,27 @@ body h1{
 }
 
 html, body{
-    overflow: hidden;
     font-size: 14px;
+}
+
+.nav-links {
+    text-align: center;
+    margin: 10px 0 20px;
+}
+
+.nav-link {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #3788d8;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    margin: 0 10px;
+}
+
+.nav-link:hover {
+    background-color: #2c6fc1;
 }
 
 .main-container {
@@ -116,9 +135,114 @@ html, body{
     background-color: #2c6fc1;
 }
 
+/* Cover classes page styles */
+#cover-classes-container {
+    width: 60%;
+    padding: 20px;
+    margin-top: 20px;
+    overflow-y: auto;
+    max-height: 80vh;
+}
+
+#cover-form-panel {
+    width: 35%;
+    padding: 20px;
+    margin-top: 20px;
+    border-left: 1px solid #ddd;
+}
+
+.date-header {
+    margin: 20px 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ddd;
+    color: #333;
+}
+
+.date-requests {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.request-card {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.request-card:hover {
+    background-color: #f1f1f1;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.request-card.selected {
+    background-color: #e8f4ff;
+    border-color: #3788d8;
+    box-shadow: 0 2px 8px rgba(55, 136, 216, 0.2);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.block-label {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #3788d8;
+}
+
+.time-label {
+    color: #666;
+}
+
+.request-details p {
+    margin: 5px 0;
+}
+
+.loading-message, .no-requests, .error {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.no-requests {
+    font-style: italic;
+}
+
+.error {
+    color: #e74c3c;
+}
+
+#cover-save-button {
+    padding: 8px 15px;
+    background-color: #3788d8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#cover-save-button:hover {
+    background-color: #2c6fc1;
+}
+
+/* Calendar styles */
 .fc-header-toolbar{
     /* an em is a relative unit of measurement that is based on the current font size. */
     padding-top: 1em; 
     padding-left: 1em;
     padding-right: 1em;
+}
+
+/* For scrollable calendar on main page */
+#calendar-container .main-container {
+    overflow: hidden;
 }

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>CoverMe</title>
-    <link rel="stylesheet" href="{% static 'covercalendar/style.css' %}?v={{ timestamp }}">
+    <link rel="stylesheet" href="{% static 'CoverCalendar/style.css' %}?v={{ timestamp }}">
     <!-- rrule lib --> 
     <script src='https://cdn.jsdelivr.net/npm/rrule@2.6.4/dist/es5/rrule.min.js'></script>
     <!-- fullcalendar bundle  "IMPORTANT"--> 
@@ -12,7 +12,7 @@
     <!-- the rrule-to-fullcalendar connector. must go AFTER the rrule lib -->
     <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.11/index.global.min.js'></script>
     <!-- Calendar Initialization -->
-    <script type="module" src="{% static 'covercalendar/calendar-init.js' %}?v={{ timestamp }}"></script>
+    <script type="module" src="{% static 'CoverCalendar/calendar-init.js' %}?v={{ timestamp }}"></script>
 
     <!-- For Theme if I have time -->
     <!--
@@ -24,6 +24,9 @@
 </head>
 <body>
     <h1>CoverMe Calendar</h1>
+    <div class="nav-links">
+        <a href="/covercalendar/cover-classes/" class="nav-link">View Classes To Cover</a>
+    </div>
     <hr>
 
     <div class="main-container">

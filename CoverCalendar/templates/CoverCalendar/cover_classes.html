@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cover Classes - CoverMe</title>
+    <link rel="stylesheet" href="{% static 'CoverCalendar/style.css' %}?v={{ timestamp }}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Cover Classes</h1>
+    <div class="nav-links">
+        <a href="/covercalendar/" class="nav-link">Back to Calendar</a>
+    </div>
+    <hr>
+
+    <div class="main-container">
+        <div id="cover-classes-container">
+            <h2>Classes Needing Coverage</h2>
+            <div id="classes-list">
+                <p class="loading-message">Loading classes that need coverage...</p>
+            </div>
+        </div>
+        
+        <div id="cover-form-panel">
+            <h2>Volunteer to Cover</h2>
+            <div id="cover-form-content">
+                <p>Click on a class to volunteer to cover it</p>
+            </div>
+            <div id="cover-edit-form" style="display: none;">
+                <form id="cover-block-form">
+                    <input type="hidden" id="coverage-id">
+                    <div class="form-group">
+                        <label for="cover-date">Date:</label>
+                        <input type="text" id="cover-date" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="cover-day">Day:</label>
+                        <input type="text" id="cover-day" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="cover-block">Block:</label>
+                        <input type="text" id="cover-block" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="cover-time">Time:</label>
+                        <input type="text" id="cover-time" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="cover-teacher">Requested By:</label>
+                        <input type="text" id="cover-teacher" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="covering-teacher">Your Name:</label>
+                        <input type="text" id="covering-teacher" placeholder="Enter your name">
+                    </div>
+                    <button type="submit" id="cover-save-button">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const classesList = document.getElementById('classes-list');
+            const coverEditForm = document.getElementById('cover-edit-form');
+            const coverFormContent = document.getElementById('cover-form-content');
+            const coverBlockForm = document.getElementById('cover-block-form');
+            
+            // Function to format date for display
+            function formatDate(dateString) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString('en-US', options);
+            }
+            
+            // Function to load unfulfilled coverage requests
+            function loadUnfulfilledRequests() {
+                axios.get('/covercalendar/api/unfulfilled-requests/')
+                    .then(function(response) {
+                        const requests = response.data;
+                        classesList.innerHTML = '';
+                        
+                        if (requests.length === 0) {
+                            classesList.innerHTML = '<p class="no-requests">No classes currently need coverage.</p>';
+                            return;
+                        }
+                        
+                        // Sort requests by date and block number
+                        requests.sort((a, b) => {
+                            if (a.date !== b.date) {
+                                return new Date(a.date) - new Date(b.date);
+                            }
+                            return a.block_number - b.block_number;
+                        });
+                        
+                        // Group by date for better organization
+                        const groupedByDate = {};
+                        requests.forEach(request => {
+                            if (!groupedByDate[request.date]) {
+                                groupedByDate[request.date] = [];
+                            }
+                            groupedByDate[request.date].push(request);
+                        });
+                        
+                        // Create HTML for each date group
+                        for (const [date, dateRequests] of Object.entries(groupedByDate)) {
+                            const dateHeader = document.createElement('h3');
+                            dateHeader.className = 'date-header';
+                            dateHeader.textContent = formatDate(date);
+                            classesList.appendChild(dateHeader);
+                            
+                            const requestsContainer = document.createElement('div');
+                            requestsContainer.className = 'date-requests';
+                            
+                            dateRequests.forEach(request => {
+                                const requestCard = document.createElement('div');
+                                requestCard.className = 'request-card';
+                                requestCard.dataset.id = request.id;
+                                requestCard.dataset.date = request.date;
+                                requestCard.dataset.day = `Day ${request.day_number}`;
+                                requestCard.dataset.block = request.block_number;
+                                requestCard.dataset.time = request.time_range;
+                                requestCard.dataset.teacher = request.teacher_name;
+                                
+                                requestCard.innerHTML = `
+                                    <div class="request-header">
+                                        <span class="block-label">Block ${request.block_number}</span>
+                                        <span class="time-label">${request.time_range}</span>
+                                    </div>
+                                    <div class="request-details">
+                                        <p>Requested by: ${request.teacher_name}</p>
+                                        <p>Day: ${request.day_number}</p>
+                                    </div>
+                                `;
+                                
+                                requestCard.addEventListener('click', function() {
+                                    // Fill the form with this request's details
+                                    document.getElementById('coverage-id').value = this.dataset.id;
+                                    document.getElementById('cover-date').value = formatDate(this.dataset.date);
+                                    document.getElementById('cover-day').value = this.dataset.day;
+                                    document.getElementById('cover-block').value = `Block ${this.dataset.block}`;
+                                    document.getElementById('cover-time').value = this.dataset.time;
+                                    document.getElementById('cover-teacher').value = this.dataset.teacher;
+                                    
+                                    // Clear any previous input
+                                    document.getElementById('covering-teacher').value = '';
+                                    
+                                    // Show the form
+                                    coverFormContent.style.display = 'none';
+                                    coverEditForm.style.display = 'block';
+                                    
+                                    // Highlight the selected card
+                                    document.querySelectorAll('.request-card').forEach(card => {
+                                        card.classList.remove('selected');
+                                    });
+                                    this.classList.add('selected');
+                                });
+                                
+                                requestsContainer.appendChild(requestCard);
+                            });
+                            
+                            classesList.appendChild(requestsContainer);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Error loading unfulfilled requests:', error);
+                        classesList.innerHTML = '<p class="error">Error loading coverage requests. Please try again later.</p>';
+                    });
+            }
+            
+            // Handle form submission
+            coverBlockForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const coveringTeacher = document.getElementById('covering-teacher').value.trim();
+                const coverageId = document.getElementById('coverage-id').value;
+                
+                if (!coveringTeacher) {
+                    alert('Please enter your name');
+                    return;
+                }
+                
+                // Submit coverage fulfillment
+                axios.post('/covercalendar/api/fulfill-coverage/', {
+                    coverage_id: coverageId,
+                    covering_teacher: coveringTeacher
+                })
+                .then(function(response) {
+                    if (response.data.success) {
+                        // Reset form and refresh list
+                        coverFormContent.style.display = 'block';
+                        coverEditForm.style.display = 'none';
+                        loadUnfulfilledRequests();
+                        
+                        // Show success message
+                        coverFormContent.innerHTML = '<p class="success-message">Thank you for covering this class!</p>';
+                        setTimeout(() => {
+                            coverFormContent.innerHTML = '<p>Click on a class to volunteer to cover it</p>';
+                        }, 3000);
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error fulfilling coverage:', error);
+                    alert('There was an error submitting your request. Please try again.');
+                });
+            });
+            
+            // Load unfulfilled requests when the page loads
+            loadUnfulfilledRequests();
+        });
+    </script>
+</body>
+</html>

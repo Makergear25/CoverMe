@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views import generic
 from django.views.decorators.csrf import csrf_exempt
@@ -14,7 +14,7 @@ from .models import (
 
 # Create your views here.
 def index(request):
-    return render(request, 'covercalendar/index.html', {
+    return render(request, 'CoverCalendar/index.html', {
         'timestamp': datetime.now().timestamp()
     })
 
@@ -160,7 +160,11 @@ def seven_day_cycle(request):
                 
                 # Create a key to identify this time block
                 key = f"{date_str}-{block_num}"
-                coverage_map[key] = cr
+                
+                # Store requests in a list for each block
+                if key not in coverage_map:
+                    coverage_map[key] = []
+                coverage_map[key].append(cr)
         except Exception as cr_error:
             print(f"Error retrieving coverage requests: {cr_error}")
             # Continue with empty coverage_map
@@ -210,16 +214,24 @@ def seven_day_cycle(request):
                 if block.notes:
                     event['description'] = block.notes
                 
-                # Check if this block has a coverage request
+                                # Check if this block has any coverage requests
                 date_str = day.date.strftime('%Y-%m-%d')
                 key = f"{date_str}-{displayed_block_number}"
+                
+                # Find any unfulfilled coverage requests for this block
+                unfulfilled_requests = []
                 if key in coverage_map:
-                    # This block needs coverage
-                    cr = coverage_map[key]
+                    unfulfilled_requests = [cr for cr in coverage_map[key] if not cr.is_fulfilled]
+                
+                if unfulfilled_requests:
+                    # If there are unfulfilled requests, mark the block as needing coverage
                     event['needs_coverage'] = True
-                    event['teacher_name'] = cr.teacher_name
-                    event['coverage_request_id'] = cr.id
+                    # Use the first unfulfilled request as the representative
+                    first_request = unfulfilled_requests[0]
+                    event['teacher_name'] = first_request.teacher_name
+                    event['coverage_request_id'] = first_request.id
                     event['className'] = 'needs-coverage'
+                    event['unfulfilled_count'] = len(unfulfilled_requests)
                 
                 events.append(event)
                 
@@ -270,19 +282,13 @@ def request_coverage(request):
             except TimeBlock.DoesNotExist:
                 return JsonResponse({'error': 'Time block not found'}, status=404)
             
-            # Check if coverage request already exists
-            coverage_request, created = CoverageRequest.objects.get_or_create(
+            # Create a new coverage request
+            coverage_request = CoverageRequest.objects.create(
                 time_block=time_block,
                 request_date=request_date,
-                defaults={
-                    'teacher_name': teacher_name
-                }
+                teacher_name=teacher_name,
+                is_fulfilled=False
             )
-            
-            if not created:
-                # Update existing request
-                coverage_request.teacher_name = teacher_name
-                coverage_request.save()
             
             return JsonResponse({
                 'success': True, 
@@ -327,4 +333,80 @@ def get_coverage_requests(request):
     
     except Exception as e:
         print(f"Error retrieving coverage requests: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+# View for cover classes page (showing classes that need coverage)
+def cover_classes(request):
+    return render(request, 'CoverCalendar/cover_classes.html', {
+        'timestamp': datetime.now().timestamp()
+    })
+
+# Endpoint to mark a coverage request as fulfilled
+@csrf_exempt
+def fulfill_coverage(request):
+    if request.method == 'POST':
+        try:
+            # Parse request body
+            data = json.loads(request.body)
+            
+            # Extract data
+            coverage_id = data.get('coverage_id')
+            covering_teacher = data.get('covering_teacher')
+            
+            if not all([coverage_id, covering_teacher]):
+                return JsonResponse({'error': 'Missing required fields'}, status=400)
+            
+            # Find the coverage request
+            try:
+                coverage_request = CoverageRequest.objects.get(id=coverage_id)
+            except CoverageRequest.DoesNotExist:
+                return JsonResponse({'error': 'Coverage request not found'}, status=404)
+            
+            # Update the coverage request
+            coverage_request.is_fulfilled = True
+            coverage_request.notes = f"Covered by: {covering_teacher}" + (f", Previous notes: {coverage_request.notes}" if coverage_request.notes else "")
+            coverage_request.save()
+            
+            return JsonResponse({
+                'success': True, 
+                'message': 'Coverage request fulfilled',
+                'id': coverage_request.id
+            })
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(f"Error fulfilling coverage request: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    # Only POST is supported
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+# API endpoint to get only unfulfilled coverage requests
+def get_unfulfilled_requests(request):
+    try:
+        # Get only unfulfilled coverage requests
+        coverage_requests = CoverageRequest.objects.filter(is_fulfilled=False)
+        
+        # Convert to list of dicts
+        data = []
+        for cr in coverage_requests:
+            time_block = cr.time_block
+            day = time_block.day
+            date_str = day.date.strftime('%Y-%m-%d')
+            
+            data.append({
+                'id': cr.id,
+                'block_number': time_block.block_number,
+                'date': date_str,
+                'day_number': day.day_number,
+                'teacher_name': cr.teacher_name,
+                'time_range': f"{time_block.start_time.strftime('%H:%M')} - {time_block.end_time.strftime('%H:%M')}",
+                'created_at': cr.created_at.isoformat()
+            })
+        
+        return JsonResponse(data, safe=False)
+    
+    except Exception as e:
+        print(f"Error retrieving unfulfilled coverage requests: {e}")
         return JsonResponse({'error': str(e)}, status=500)

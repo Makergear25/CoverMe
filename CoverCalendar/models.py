@@ -162,6 +162,22 @@ class TimeBlock(models.Model):
     def __str__(self):
         return f"Block {self.block_number} ({self.start_time} - {self.end_time})"
 
+# Model for coverage requests
+class CoverageRequest(models.Model):
+    time_block = models.ForeignKey(TimeBlock, on_delete=models.CASCADE, related_name='coverage_requests')
+    teacher_name = models.CharField(max_length=100)
+    request_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, null=True, help_text="Additional notes for the coverage request")
+    is_fulfilled = models.BooleanField(default=False, help_text="Whether this coverage request has been fulfilled")
+    
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = [['time_block', 'request_date']]
+    
+    def __str__(self):
+        return f"Coverage for {self.time_block} requested by {self.teacher_name} on {self.request_date}"
+
 # Original models - will be migrated and then removed
 class ClassBlocks(models.Model):
     cycle_number = models.IntegerField() # TODO: Not sure 'IntegerField' is the correct choice here.

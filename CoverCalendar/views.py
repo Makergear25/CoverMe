@@ -1,12 +1,15 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.views import generic
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.dateparse import parse_date
 from datetime import datetime, timedelta
 from django.utils import timezone
+import json
 
 from .models import (
     ClassBlocks, CycleDay, TimeSlot, BlockAssignment,
-    Cycle, Day, TimeBlock
+    Cycle, Day, TimeBlock, CoverageRequest
 )
 
 # Create your views here.
@@ -140,6 +143,28 @@ def seven_day_cycle(request):
         # Get all days from all cycles in chronological order
         days = Day.objects.all().order_by('date')
         
+        # Get all coverage requests
+        coverage_map = {}
+        
+        try:
+            # Get all coverage requests
+            coverage_requests = CoverageRequest.objects.all()
+            
+            # Create a lookup map for coverage requests by time_block_id and date
+            for cr in coverage_requests:
+                # Get the date and block number as a key
+                time_block = cr.time_block
+                day = time_block.day
+                date_str = day.date.strftime('%Y-%m-%d')
+                block_num = time_block.block_number
+                
+                # Create a key to identify this time block
+                key = f"{date_str}-{block_num}"
+                coverage_map[key] = cr
+        except Exception as cr_error:
+            print(f"Error retrieving coverage requests: {cr_error}")
+            # Continue with empty coverage_map
+        
         # For each day, create events
         for day in days:
             # Add the day label
@@ -177,12 +202,25 @@ def seven_day_cycle(request):
                     'start': f'{day.date.strftime("%Y-%m-%d")}T{start_time}',
                     'end': f'{day.date.strftime("%Y-%m-%d")}T{end_time}',
                     'allDay': False,
+                    'block_id': block.id,
+                    'block_number': displayed_block_number,
                 }
                 
                 # Add notes if present
                 if block.notes:
                     event['description'] = block.notes
-                    
+                
+                # Check if this block has a coverage request
+                date_str = day.date.strftime('%Y-%m-%d')
+                key = f"{date_str}-{displayed_block_number}"
+                if key in coverage_map:
+                    # This block needs coverage
+                    cr = coverage_map[key]
+                    event['needs_coverage'] = True
+                    event['teacher_name'] = cr.teacher_name
+                    event['coverage_request_id'] = cr.id
+                    event['className'] = 'needs-coverage'
+                
                 events.append(event)
                 
     except Exception as e:
@@ -198,3 +236,95 @@ def time_blocks(request):
     print(f"Calendar API returning {len(response.content)} bytes of data")
     print(f"First 200 characters of response: {response.content[:200]}")
     return response
+
+# Endpoint to request coverage for a time block
+@csrf_exempt
+def request_coverage(request):
+    if request.method == 'POST':
+        try:
+            # Parse request body
+            data = json.loads(request.body)
+            
+            # Extract data
+            block_number = data.get('blockNumber')
+            teacher_name = data.get('teacherName')
+            date_str = data.get('date')
+            
+            if not all([block_number, teacher_name, date_str]):
+                return JsonResponse({'error': 'Missing required fields'}, status=400)
+            
+            # Parse date
+            request_date = parse_date(date_str)
+            if not request_date:
+                return JsonResponse({'error': 'Invalid date format'}, status=400)
+            
+            # Find the day
+            try:
+                day = Day.objects.get(date=request_date)
+            except Day.DoesNotExist:
+                return JsonResponse({'error': 'Day not found'}, status=404)
+            
+            # Find the time block
+            try:
+                time_block = TimeBlock.objects.get(day=day, block_number=block_number)
+            except TimeBlock.DoesNotExist:
+                return JsonResponse({'error': 'Time block not found'}, status=404)
+            
+            # Check if coverage request already exists
+            coverage_request, created = CoverageRequest.objects.get_or_create(
+                time_block=time_block,
+                request_date=request_date,
+                defaults={
+                    'teacher_name': teacher_name
+                }
+            )
+            
+            if not created:
+                # Update existing request
+                coverage_request.teacher_name = teacher_name
+                coverage_request.save()
+            
+            return JsonResponse({
+                'success': True, 
+                'message': 'Coverage request created',
+                'id': coverage_request.id
+            })
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(f"Error processing coverage request: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    # Only POST is supported
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+# Endpoint to get all coverage requests
+def get_coverage_requests(request):
+    try:
+        # Get all coverage requests
+        coverage_requests = CoverageRequest.objects.all()
+        
+        # Convert to list of dicts
+        data = []
+        for cr in coverage_requests:
+            time_block = cr.time_block
+            day = time_block.day
+            date_str = day.date.strftime('%Y-%m-%d')
+            
+            data.append({
+                'id': cr.id,
+                'block_number': time_block.block_number,
+                'date': date_str,
+                'teacher_name': cr.teacher_name,
+                'time_range': f"{time_block.start_time.strftime('%H:%M')} - {time_block.end_time.strftime('%H:%M')}",
+                'created_at': cr.created_at.isoformat(),
+                'is_fulfilled': cr.is_fulfilled,
+                'notes': cr.notes if cr.notes else ''
+            })
+        
+        return JsonResponse(data, safe=False)
+    
+    except Exception as e:
+        print(f"Error retrieving coverage requests: {e}")
+        return JsonResponse({'error': str(e)}, status=500)

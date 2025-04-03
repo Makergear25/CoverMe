@@ -7,11 +7,113 @@ html, body{
     font-size: 14px;
 }
 
+.main-container {
+    display: flex;
+    flex-direction: row;
+    height: 80vh;
+    width: 100%;
+}
+
 #calendar-container{
     position: relative;
-    width: 50%;
+    width: 60%;
     height: 800px; /* I don't want to keep this static to account for different window sizes */
     margin-top: 20px;
+}
+
+#details-panel {
+    width: 35%;
+    padding: 20px;
+    margin-top: 20px;
+    border-left: 1px solid #ddd;
+}
+
+#details-panel h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+#details-content {
+    margin-bottom: 20px;
+}
+
+.note {
+    font-style: italic;
+    color: #e67e22;
+    margin-top: 15px;
+}
+
+.success-message {
+    color: #27ae60;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #f1f9f1;
+    border-radius: 4px;
+    border-left: 4px solid #27ae60;
+    margin: 15px 0;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #fdf2f0;
+    border-radius: 4px;
+    border-left: 4px solid #e74c3c;
+    margin: 15px 0;
+}
+
+.retry-button {
+    padding: 8px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: block;
+    margin-top: 15px;
+}
+
+.retry-button:hover {
+    background-color: #2980b9;
+}
+
+/* Style for blocks that need coverage */
+.needs-coverage {
+    background-color: #e67e22 !important;
+    border-color: #d35400 !important;
+    color: white !important;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#save-button {
+    padding: 8px 15px;
+    background-color: #3788d8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#save-button:hover {
+    background-color: #2c6fc1;
 }
 
 .fc-header-toolbar{

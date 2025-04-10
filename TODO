@@ -1,12 +1,5 @@
-TODO: Refresh on the difference between Class and ID Attributes
-TODO: Learn what the hell '::after' does in CSS. What is the application?. "https://developer.mozilla.org/en-US/docs/Web/CSS/::after"
+TODO: Learn what '::after' does in CSS. What is the application?. "https://developer.mozilla.org/en-US/docs/Web/CSS/::after"
 TODO: Look into using a base.html
 
 
-
-TODO: Figure out how to systematically generate the class blocks each day!!!
-TODO: Create the window where the user enters their information on the block they have selected
-TODO: Create another app where you can view what classes need to be covered
-
-TODO: The cycle is finally on the calendar but it is putting days on the weekends which we dont want
-TODO: Figure out how the hell I am going to deal with Wednesday
+TODO: Figure out how I am going to deal with Wednesday

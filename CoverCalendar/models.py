@@ -33,7 +33,7 @@ class CycleGenerationSettings(models.Model):
         # Start from the start date
         current_date = self.start_date
         
-        # Ensure start date is a weekday
+        # Make sure start date is a weekday
         while current_date.weekday() >= 5:  # If weekend day
             current_date += timedelta(days=1)  # Move to next day until weekday
         
